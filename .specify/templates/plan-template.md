@@ -43,8 +43,11 @@
 - [ ] Node.js & Strict TypeScript: Is the feature designed with strict typing?
 - [ ] pnpm Package Manager: Is pnpm used for any new dependencies?
 - [ ] Prisma & SQLite: Are database changes planned via Prisma migrations?
-- [ ] Clean Architecture: Does the design respect layer separation?
+- [ ] Clean Architecture & Dependency Inversion: Are Use Cases decoupled from infra via interfaces?
 - [ ] Comprehensive Validation: Are all inputs validated at the entry point?
+- [ ] Adapter Pattern: Are external dependencies encapsulated?
+- [ ] Given-When-Then Testing: Do the planned tests follow the mandatory pattern?
+- [ ] Dockerization: Is the production Dockerfile optimized and multi-stage?
 
 ## Project Structure
 

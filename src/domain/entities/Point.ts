@@ -1,6 +1,5 @@
 export interface Point {
   id: string;
-  image: string;
   name: string;
   email: string;
   whatsapp: string;
@@ -8,4 +7,5 @@ export interface Point {
   longitude: number;
   city: string;
   uf: string;
+  image: string;
 }

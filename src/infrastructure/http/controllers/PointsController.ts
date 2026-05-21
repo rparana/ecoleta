@@ -1,10 +1,16 @@
 import { Request, Response } from "express";
-import FilterPointsUseCase from "../use-cases/FilterPointsUseCase";
-import CreatePointUseCase from "../use-cases/CreatePointUseCase";
-import GetPointDetailsUseCase from "../use-cases/GetPointDetailsUseCase";
-import { filterPointsSchema, createPointSchema } from "../validation/pointSchemas";
+import { FilterPointsUseCase } from "../../../use-cases/list-points/FilterPointsUseCase";
+import { CreatePointUseCase } from "../../../use-cases/create-point/CreatePointUseCase";
+import { GetPointDetailsUseCase } from "../../../use-cases/get-point/GetPointDetailsUseCase";
+import { filterPointsSchema, createPointSchema } from "../../../validation/pointSchemas";
 
-class PointsController {
+export class PointsController {
+  constructor(
+    private filterPointsUseCase: FilterPointsUseCase,
+    private createPointUseCase: CreatePointUseCase,
+    private getPointDetailsUseCase: GetPointDetailsUseCase,
+  ) {}
+
   async index(request: Request, response: Response) {
     const result = filterPointsSchema.safeParse(request.query);
 
@@ -14,7 +20,7 @@ class PointsController {
 
     const { city, uf, items } = result.data;
 
-    const points = await FilterPointsUseCase.execute({ city, uf, items });
+    const points = await this.filterPointsUseCase.execute({ city, uf, items });
 
     return response.json(points);
   }
@@ -26,7 +32,7 @@ class PointsController {
       return response.status(400).json({ error: result.error.format() });
     }
 
-    const point = await CreatePointUseCase.execute(result.data);
+    const point = await this.createPointUseCase.execute(result.data);
 
     return response.status(201).json(point);
   }
@@ -34,7 +40,7 @@ class PointsController {
   async show(request: Request, response: Response) {
     const { id } = request.params;
 
-    const result = await GetPointDetailsUseCase.execute(id);
+    const result = await this.getPointDetailsUseCase.execute(id);
 
     if (!result) {
       return response.status(400).json({ message: "Point not found." });
@@ -43,5 +49,3 @@ class PointsController {
     return response.json(result);
   }
 }
-
-export default new PointsController();

@@ -21,6 +21,8 @@
   - Tested independently
   - Deployed independently
   - Demonstrated to users independently
+
+  NOTE: All acceptance scenarios MUST rigorously follow the Given-When-Then pattern.
 -->
 
 ### User Story 1 - [Brief Title] (Priority: P1)
