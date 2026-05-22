@@ -1,0 +1,237 @@
+openapi: 3.0.3
+info:
+  title: ecoleta API
+  description: API for managing waste collection points, migrated to Clean Architecture and Prisma.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3333
+    description: Local development server
+
+paths:
+  /items:
+    get:
+      summary: List all collection items
+      description: Returns a list of all available waste items (e.g., batteries, oil) with their titles and resolved image URLs.
+      responses:
+        '200':
+          description: A list of items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Item'
+
+  /points:
+    get:
+      summary: Filter collection points
+      description: Returns a list of collection points filtered by city, state (UF), and accepted items.
+      parameters:
+        - name: city
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Name of the city (e.g., Curitiba)
+        - name: uf
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 2
+          description: State acronym (e.g., PR)
+        - name: items
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Comma-separated list of item IDs (e.g., 1,2)
+      responses:
+        '200':
+          description: A list of matching points
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Point'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Register a new collection point
+      description: Creates a new collection point and associates it with a list of accepted items in a single atomic transaction.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePointRequest'
+      responses:
+        '201':
+          description: Point created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Point'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /points/{id}:
+    get:
+      summary: Get point details
+      description: Returns the full profile of a specific collection point including the titles of all items it accepts.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Unique identifier of the point
+      responses:
+        '200':
+          description: Point details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  point:
+                    $ref: '#/components/schemas/Point'
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        title:
+                          type: string
+        '400':
+          description: Point not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Point not found.
+
+components:
+  schemas:
+    Item:
+      type: object
+      required:
+        - id
+        - title
+        - image_url
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: Lâmpadas
+        image_url:
+          type: string
+          format: uri
+          example: http://localhost:3333/uploads/lampadas.svg
+
+    Point:
+      type: object
+      required:
+        - id
+        - name
+        - email
+        - whatsapp
+        - latitude
+        - longitude
+        - city
+        - uf
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: uuid-v4-string
+        name:
+          type: string
+          example: Mercadão do Povo
+        email:
+          type: string
+          format: email
+          example: contato@mercadao.com
+        whatsapp:
+          type: string
+          example: "41999999999"
+        latitude:
+          type: number
+          format: float
+          example: -46.545621
+        longitude:
+          type: number
+          format: float
+          example: -23.564987
+        city:
+          type: string
+          example: Curitiba
+        uf:
+          type: string
+          minLength: 2
+          maxLength: 2
+          example: PR
+        image:
+          type: string
+          format: uri
+
+    CreatePointRequest:
+      type: object
+      required:
+        - name
+        - email
+        - whatsapp
+        - latitude
+        - longitude
+        - city
+        - uf
+        - items
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        whatsapp:
+          type: string
+        latitude:
+          type: number
+          format: float
+        longitude:
+          type: number
+          format: float
+        city:
+          type: string
+        uf:
+          type: string
+          minLength: 2
+          maxLength: 2
+        items:
+          type: array
+          items:
+            type: integer
+          description: Array of item IDs to associate with this point
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          description: Zod validation error format

@@ -1,20 +1,20 @@
-# Implementation Plan: Waste Collection Point Management Migration
+# Implementation Plan: Waste Collection Point Management Migration (Finalization & Docs)
 
 **Branch**: `002-modernize-migration-spec` | **Date**: 2026-05-21 | **Spec**: [specs/001-migration/spec.md](spec.md)
 
 **Input**: Feature specification from `/specs/001-migration/spec.md`
 
-**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
+**Note**: This plan outlines the finalization of the ecoleta migration, focusing on production readiness and public API documentation.
 
 ## Summary
 
-Migrate the legacy ecoleta system to a modern Clean Architecture using Node.js/TS, Prisma (SQLite), and Zod. The focus is on strict decoupling using Repository and Adapter patterns, multi-stage Dockerization for production, and rigorous Given-When-Then testing.
+Complete the migration of the legacy ecoleta system by establishing a production-ready containerized environment, implementing a public API documentation endpoint using OpenAPI/Swagger, and formalizing the project's new architecture.
 
 ## Technical Context
 
 **Language/Version**: Node.js 20+ with TypeScript 5.x (Strict Mode)
 
-**Primary Dependencies**: Express.js, Prisma, Zod
+**Primary Dependencies**: Express.js, Prisma, Zod, `swagger-ui-express`, `yamljs`
 
 **Storage**: SQLite (via Prisma)
 
@@ -22,11 +22,7 @@ Migrate the legacy ecoleta system to a modern Clean Architecture using Node.js/T
 
 **Target Platform**: Docker (Multi-stage / Alpine)
 
-**Project Type**: Web Service / API
-
-**Performance Goals**: <500ms for all read operations.
-
-**Constraints**: pnpm only, mandatory Dependency Inversion, no leakage of Prisma/Express into Domain.
+**Documentation**: OpenAPI 3.0 (YAML) served at `/api-docs`
 
 ## Constitution Check
 
@@ -35,9 +31,9 @@ Migrate the legacy ecoleta system to a modern Clean Architecture using Node.js/T
 - [x] Node.js & Strict TypeScript: Mandatory for all new code.
 - [x] pnpm Package Manager: Only package manager allowed.
 - [x] Prisma & SQLite: Core data persistence strategy.
-- [x] Clean Architecture & Dependency Inversion: Use Cases decoupled from infrastructure.
+- [x] Clean Architecture & Dependency Inversion: Use Cases decoupled from infrastructure via interfaces.
 - [x] Comprehensive Validation: Zod schemas for all entry points.
-- [x] Adapter Pattern: External dependencies encapsulated.
+- [x] Adapter Pattern: External dependencies (Express, Prisma, Swagger) encapsulated.
 - [x] Given-When-Then Testing: Mandatory pattern for all tests.
 - [x] Dockerization: Multi-stage production-ready Dockerfile.
 
@@ -45,47 +41,49 @@ Migrate the legacy ecoleta system to a modern Clean Architecture using Node.js/T
 
 ```text
 src/
-├── domain/              # Entities and Business Rules (Strictly Decoupled)
-│   ├── entities/        # Item, Point
-│   └── repositories/    # IItemsRepository, IPointsRepository (Interfaces)
-├── use-cases/           # Application Logic
-│   ├── list-items/      # ListItemsUseCase
-│   ├── create-point/    # CreatePointUseCase
-│   └── get-point/       # GetPointDetailsUseCase
+├── domain/              # Entities and Repository Interfaces
+├── use-cases/           # Application Logic (Decoupled)
 ├── infrastructure/      # Concrete Implementations
-│   ├── database/        # PrismaPointsRepository, PrismaItemsRepository
+│   ├── database/        # Prisma Repositories
 │   ├── http/            # Express Adapters (Controllers, Server, Routes)
-│   └── config/          # Environment configuration
-└── validation/          # Zod schemas (ZodPointsValidator)
+│   └── docs/            # Swagger/OpenAPI setup
+├── validation/          # Zod schemas
+└── server.ts            # Entry point
+docs/
+├── openapi.yaml         # API Contract (OpenAPI 3.0)
+└── migration-history.md # Architectural transition log
 ```
 
-**Structure Decision**: Clean Architecture with explicit layer separation and interface-driven decoupling.
+## Finalization Steps
+
+### 1. Production Docker Environment
+- **Multi-stage**: `base` (corepack pnpm), `deps` (full install), `build` (prisma gen + tsc), `prod-deps` (pruned), `release` (alpine + non-root user).
+- **Security**: Run as `nodejs` user, `NODE_ENV=production`.
+
+### 2. Public API Documentation (/api-docs)
+- **Tooling**: `swagger-ui-express` for serving the UI, `yamljs` for parsing the YAML contract.
+- **Dynamic Loading**: Load `openapi.yaml` at runtime to ensure the UI stays in sync with the file.
+- **Architecture**: Implement as a dedicated documentation adapter in `infrastructure/docs`.
+
+### 3. Migration History & Changelog
+- **File**: `docs/migration-history.md`.
+- **Content**: Log of architectural shifts (Knex -> Prisma), removed legacy files, and future scaling roadmap.
+
+### 4. Comprehensive README.md
+- **Content**: Setup instructions (pnpm), Architecture overview, Docker execution, and BDD testing guide.
+
+### 5. Detailed Pull Request Description
+- **Content**: Summary of migration, before/after architectural mapping, and verification results.
 
 ## Testing Strategy: Given-When-Then
 
 All tests (Unit and Integration) must follow the Gherkin structure:
-
-- **Given**: Setup the test context (e.g., seeding the database, mocking dependencies).
-- **When**: Execute the action being tested (e.g., calling a Use Case method, sending an HTTP request).
-- **Then**: Assert the expected outcome (e.g., verifying database state, checking response status and body).
-
-Example for Integration Test:
-```typescript
-it("should return a list of points when filters match", async () => {
-  // Given: Registered points in Curitiba for Baterias
-  // When: User searches for points in Curitiba/PR with item Baterias
-  // Then: System returns a list of points matching these criteria
-});
-```
-
-## Multi-stage Dockerfile Setup
-
-- **Stage 1: Base**: Install pnpm and dependencies.
-- **Stage 2: Build**: Compile TypeScript to JavaScript, run Prisma generate.
-- **Stage 3: Release**: Copy only necessary files (`dist`, `node_modules`, `prisma`, `package.json`) to a slim Alpine image. Run as a non-root user.
+- **Given**: Setup state.
+- **When**: Trigger action.
+- **Then**: Verify outcome.
 
 ## Complexity Tracking
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
-| N/A | No violations detected. | N/A |
+| N/A | No violations. | N/A |

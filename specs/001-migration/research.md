@@ -1,28 +1,27 @@
-# Research: Waste Collection Point Management Migration
+# Research: Waste Collection Point Management Migration (Finalization & Docs)
 
 ## Decisions
 
-### 1. Decoupling Use Cases from Infrastructure
-- **Decision**: Define repository interfaces in `src/domain/repositories/` and concrete implementations in `src/infrastructure/database/`.
-- **Rationale**: Satisfies the "Dependency Inversion" principle. Use Cases depend only on interfaces, making them agnostic of Prisma or any other ORM.
-- **Alternatives considered**: Direct Prisma calls in Use Cases (violates Clean Architecture).
+### 1. Dynamic API Documentation
+- **Decision**: Use `yamljs` to load `openapi.yaml` and `swagger-ui-express` to serve it.
+- **Rationale**: Keeps the documentation UI automatically synchronized with the source contract file. This avoids the need for manual UI updates when the specification changes.
+- **Alternatives considered**: Redoc (static generation), manual HTML setup (harder to maintain).
 
-### 2. Multi-stage Dockerization
-- **Decision**: Use a 3-stage Dockerfile (`base`, `build`, `release`) based on `node:20-alpine`.
-- **Rationale**: Optimizes for small production images while ensuring a consistent build environment. Running as a non-root user (`node`) enhances security (INF-002).
-- **Alternatives considered**: Single-stage build (results in bloated images with dev dependencies).
+### 2. Multi-stage Docker Pruning
+- **Decision**: Include a specific `prod-deps` stage using `pnpm install --prod`.
+- **Rationale**: Dramatically reduces image size by excluding development dependencies (like `typescript`, `ts-node`, `jest`) from the final production container.
+- **Security**: Separation of build-time tools from the runtime environment minimizes the attack surface.
 
-### 3. Testing Pattern: Given-When-Then
-- **Decision**: Enforce `// Given`, `// When`, `// Then` comments in all `jest` test files.
-- **Rationale**: Improves readability and ensures alignment with business scenarios defined in the spec (NFR-006).
-- **Alternatives considered**: standard Jest `expect` calls without comments (harder to map to requirements).
+### 3. Repository-Layer Transaction Encapsulation
+- **Decision**: Atomic point creation logic (handling items) is encapsulated within `PrismaPointsRepository.create`.
+- **Rationale**: The Use Case remains agnostic of the transaction mechanism (Prisma's `$transaction`), adhering to the "Dependency Inversion" principle.
 
-### 4. Data Validation with Zod
-- **Decision**: Encapsulate Zod schemas in `src/validation/` and use them as Adapters.
-- **Rationale**: Prevents Zod-specific types from leaking into the domain. Controllers will use these adapters to validate and transform input data.
+### 4. BDD Testing Comments
+- **Decision**: Mandatory `// Given`, `// When`, `// Then` markers in all test blocks.
+- **Rationale**: Ensures that every automated test case is a direct reflection of a business requirement from the feature specification.
 
 ## Technology Best Practices
 
-- **Prisma**: Use `pnpm dlx prisma generate` in the Docker build stage.
-- **Docker**: Leverage `.dockerignore` to skip `node_modules` and `dist` from the host.
-- **Security**: Use the `USER node` directive in the final Docker stage.
+- **Swagger**: Map the `/api-docs` route early in the middleware chain to ensure accessibility.
+- **Dockerfile**: Use `chown` during `COPY` to ensure the non-root user has proper access to the `dist` and `node_modules`.
+- **Prisma**: Always run `prisma generate` in both build and runtime dependency stages to ensure client availability.

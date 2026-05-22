@@ -23,6 +23,8 @@
     "dotenv": "^17.4.2",
     "express": "^4.22.2",
     "prisma": "^6.2.1",
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -33,6 +35,8 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^25.9.1",
     "@types/supertest": "^2.0.12",
+    "@types/swagger-ui-express": "^4.1.8",
+    "@types/yamljs": "^0.2.34",
     "@typescript-eslint/eslint-plugin": "^8.59.4",
     "@typescript-eslint/parser": "^8.59.4",
     "eslint": "^10.4.0",

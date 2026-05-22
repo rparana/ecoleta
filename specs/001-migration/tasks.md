@@ -109,7 +109,8 @@ Tasks are grouped by User Story to enable independent implementation and testing
 **Purpose**: Cleanup, documentation, and optimization.
 
 - [x] T035 Verify all internal Use Case dependencies point only to interfaces (`src/domain/repositories`), not concrete Prisma implementations.
-- [ ] T036 Ensure all API routes are appropriately documented or integrated with Swagger/OpenAPI (if required by team).
+- [x] T036 Ensure all API routes are appropriately documented or integrated with Swagger/OpenAPI (if required by team).
+- [x] T037 Expose visual API documentation at `/api-docs` using `swagger-ui-express` and `yamljs`.
 
 ---
 
