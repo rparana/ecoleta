@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Point {
+  id        String      @id @default(uuid())
+  image     String
+  name      String
+  email     String
+  whatsapp  String
+  latitude  Float
+  longitude Float
+  city      String
+  uf        String
+  items     PointItem[]
+
+  @@map("points")
+}
+
+model Item {
+  id     Int         @id @default(autoincrement())
+  image  String
+  title  String
+  points PointItem[]
+
+  @@map("items")
+}
+
+model PointItem {
+  point_id String
+  item_id  Int
+  point    Point  @relation(fields: [point_id], references: [id])
+  item     Item   @relation(fields: [item_id], references: [id])
+
+  @@id([point_id, item_id])
+  @@map("point_items")
+}
