@@ -40,7 +40,7 @@ export class PointsController {
   async show(request: Request, response: Response) {
     const { id } = request.params;
 
-    const result = await this.getPointDetailsUseCase.execute(id);
+    const result = await this.getPointDetailsUseCase.execute(id as string);
 
     if (!result) {
       return response.status(400).json({ message: "Point not found." });
